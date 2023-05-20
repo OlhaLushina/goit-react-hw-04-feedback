@@ -1,33 +1,45 @@
+import { useState } from 'react';
 import { GlobalStyle } from './GlobalStyle';
-import { Component } from 'react';
 import { Section } from './Section/Section';
 import { FeedbackOptions } from './FeedbackOptions/FeedbackOptions';
 import { Statistics } from './Statistics/Statistics';
 import { Notification } from './Notification/Notification';
 
-export class App extends Component {
-  state = {
-    good: 0,
-    neutral: 0,
-    bad: 0,
-  };
+export const App = () => {
+  const [good, setGood] = useState(0);
+  const [neutral, setNeutral] = useState(0);
+  const [bad, setBad] = useState(0);
 
   /* Залишити відгук */
-  leaveFeedback = type => {
-    this.setState(prevState => ({ [type]: prevState[type] + 1 }));
+  const leaveFeedback = type => {
+    switch (type) {
+      case 'good': {
+        setGood(prevState => prevState + 1);
+        break;
+      }
+      case 'neutral': {
+        setNeutral(prevState => prevState + 1);
+        break;
+      }
+      case 'bad': {
+        setBad(prevState => prevState + 1);
+        break;
+      }
+      default:
+        return;
+    }
   };
 
   /* Кількість усіх відгуків */
-  countTotalFeedback = () =>
-    Object.values(this.state).reduce((total, number) => total + number, 0);
+  const countTotalFeedback = () => good + neutral + bad;
 
   /* Відсоток позитивних відгуків */
-  countPositiveFeedbackPercentage = () => {
+  const countPositiveFeedbackPercentage = () => {
     // Кількість усіх відгуків
-    const total = this.countTotalFeedback();
+    const total = countTotalFeedback();
 
     // Процент позитивних відгуків
-    const positivePercentage = total ? (this.state.good * 100) / total : 0;
+    const positivePercentage = total ? (good * 100) / total : 0;
 
     // Якщо число не ціле, то залишаємо 2 цифри після коми
     return Number.isInteger(positivePercentage)
@@ -35,28 +47,26 @@ export class App extends Component {
       : positivePercentage.toFixed(2);
   };
 
-  render() {
-    return (
-      <>
-        <GlobalStyle />
-        <Section title="Please leave feedback">
-          <FeedbackOptions
-            options={Object.keys(this.state)}
-            onLeaveFeedback={this.leaveFeedback}
-          ></FeedbackOptions>
-        </Section>
-        <Section title="Statistics">
-          {this.countTotalFeedback() > 0 ? (
-            <Statistics
-              options={this.state}
-              total={this.countTotalFeedback()}
-              positivePercentage={this.countPositiveFeedbackPercentage()}
-            ></Statistics>
-          ) : (
-            <Notification message="There is no feedback" />
-          )}
-        </Section>
-      </>
-    );
-  }
-}
+  return (
+    <>
+      <GlobalStyle />
+      <Section title="Please leave feedback">
+        <FeedbackOptions
+          options={['good', 'neutral', 'bad']}
+          onLeaveFeedback={leaveFeedback}
+        ></FeedbackOptions>
+      </Section>
+      <Section title="Statistics">
+        {countTotalFeedback() > 0 ? (
+          <Statistics
+            options={{ good, neutral, bad }}
+            total={countTotalFeedback()}
+            positivePercentage={countPositiveFeedbackPercentage()}
+          ></Statistics>
+        ) : (
+          <Notification message="There is no feedback" />
+        )}
+      </Section>
+    </>
+  );
+};
